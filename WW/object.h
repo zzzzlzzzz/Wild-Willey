@@ -12,6 +12,7 @@
 
 #include "animation.h"
 #include "hud.h"
+#include "music.h"
 
 namespace GameSpace
 {
@@ -313,6 +314,7 @@ namespace GameSpace
 		float m_moveSpeed, m_jumpSpeed;	// скорость движения и прыжка
 		float m_desiredVelocityX;	// скорость, которую хочется достигнуть игроку
 		HUD m_hud;	// инфо-панель
+		PlayerSound m_sound;	// звуковые эффекты
 		int m_currentLive, m_totalLive;	// текущее количество жизней и всего жизней
 		int m_currentCoin, m_maxCoin;	// текущее количество монет и количество монет для выйгрыша
 	public:
@@ -335,7 +337,8 @@ namespace GameSpace
 						const Animation& animator, b2World* world,
 						float density, float friction,
 						float xvelocity, float yvelocity,
-						const HUD& hud, int playerLive, int maxCoin);
+						const HUD& hud, const PlayerSound& sound, 
+						int playerLive, int maxCoin);
 
 		PlayerObject(const PlayerObject& other) = default;
 		PlayerObject& operator=(const PlayerObject& other) = default;

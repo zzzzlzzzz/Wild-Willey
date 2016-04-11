@@ -399,7 +399,8 @@ namespace GameSpace
 	PlayerObject::PlayerObject(	const sf::Image& source, int centerX, int centerY,
 								const Animation& animator, b2World* world,
 								float density, float friction,
-								float xvelocity, float yvelocity, const HUD& hud, 
+								float xvelocity, float yvelocity, 
+								const HUD& hud, const PlayerSound& sound,
 								int playerLive, int maxCoin)
 				: MoveObject(	source, centerX, centerY,
 								animator.getFrame(true).m_x,
@@ -409,7 +410,8 @@ namespace GameSpace
 								world, density, friction),
 				m_numFootContact(0),
 				m_animator(animator), m_moveSpeed(xvelocity), m_jumpSpeed(yvelocity),
-				m_hud(hud), m_currentLive(playerLive), m_totalLive(playerLive), 
+				m_hud(hud), m_sound(sound), 
+				m_currentLive(playerLive), m_totalLive(playerLive), 
 				m_currentCoin(0), m_maxCoin(maxCoin)
 	{
 		getBody()->SetFixedRotation(true);	// предотвращаем поворот спрайта при соскальзывании
@@ -570,10 +572,20 @@ namespace GameSpace
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
 		{
 			m_desiredVelocityX = -m_moveSpeed;
+
+			if (m_numFootContact > 0)
+			{
+				m_sound.walk();
+			}
 		}
 		else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
 		{
 			m_desiredVelocityX = m_moveSpeed;
+
+			if (m_numFootContact > 0)
+			{
+				m_sound.walk();
+			}
 		}
 		float impulsex = getBody()->GetMass() * (m_desiredVelocityX - bodyVelocity.x);
 
@@ -585,12 +597,15 @@ namespace GameSpace
 			{
 				impulsey = -(getBody()->GetMass() * m_jumpSpeed);
 				lastSignalIsJump = true;
+
+				m_sound.jump();
 			}
 		}
 		else
 		{
 			lastSignalIsJump = false;
 		}
+
 		// F = ma; a = v/t => F = mv/t
 		getBody()->ApplyForceToCenter(b2Vec2(impulsex / delta, impulsey / delta), true);
 	}

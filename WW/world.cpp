@@ -195,6 +195,13 @@ namespace GameSpace
 		}
 		const HUD playerHud(readHUDFromXML(hud));
 
+		TiXmlElement* sound = rootElement->FirstChildElement("sound");;
+		if (!sound)
+		{
+			throw runtime_error("GameSpace::World::loadPlayerFromFile if (!sound)");
+		}
+		const PlayerSound playerSound(readValFromXML(sound, "step"), readValFromXML(sound, "jump"));
+
 		sf::Image playerImage;
 		if (!playerImage.loadFromFile(file))
 		{
@@ -204,7 +211,8 @@ namespace GameSpace
 		const int playerCenterY(static_cast<int>(bottomY - animator.getFrame(true).m_height / 2.0));
 		auto player = make_shared<PlayerObject>(playerImage, playerCenterX, playerCenterY,
 												animator, m_physWorld.get(), density, friction, 
-												xvelocity, yvelocity, playerHud, lives, winCoins);
+												xvelocity, yvelocity, playerHud, playerSound, 
+												lives, winCoins);
 		m_gameObjects.push_back(player);
 
 		m_controlView = std::bind(&PlayerObject::controlView, player, std::placeholders::_1);

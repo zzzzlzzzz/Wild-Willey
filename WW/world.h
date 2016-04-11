@@ -17,6 +17,7 @@
 #include "object.h"
 #include "animation.h"
 #include "hud.h"
+#include "music.h"
 
 namespace GameSpace
 {
