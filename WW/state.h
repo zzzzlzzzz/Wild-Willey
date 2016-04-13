@@ -9,31 +9,38 @@
 
 #include "config.h"
 #include "world.h"
+#include "music.h"
 
 namespace GameSpace
 {
+	//////////////////////////////////////////////////////////////////////////
+	enum class GameState
+	{
+		GS_GAME,		// игровой процесс
+		GS_GAMEFAIL,	// проигрыш
+		GS_GAMEWIN,		// выигрыш
+		GS_MENU,		// меню
+		GS_LEVEL,		// выбор уровня
+		GS_EXIT			// выход
+	};
 	//////////////////////////////////////////////////////////////////////////
 	// состояние, которое будет обрабатываться в момент времени
 	class State
 	{
 	public:
-		enum class GameState
-		{
-			GS_GAME,		// игровой процесс
-			GS_GAMEFAIL,	// проигрыш
-			GS_GAMEWIN,		// выигрыш
-			GS_MENU,		// меню
-			GS_LEVEL,		// выбор уровня
-			GS_EXIT			// выход
-		};
 		/*
 			@brief обновление состояния
-			@param prevState предыдущее состояние
 			@ret   новое состояние
 		*/
-		GameState update(GameState prevState);
+		virtual GameState update();
 
-		State(sf::RenderWindow* render);
+		/*
+			@brief выполняет подготовку состояния
+					вызывается после переключения на это состояние
+		*/
+		virtual void statePrepare() = 0;
+
+		State(sf::RenderWindow* render, GameSound* soundPlayer);
 		virtual ~State() = default;
 	protected:
 		/*
@@ -46,6 +53,10 @@ namespace GameSpace
 			@ret   указатель на объект для отображения
 		*/
 		sf::RenderWindow* getRender();
+		/*
+			@brief возвращает указатель на проигрыватель
+		*/
+		GameSound* getSoundPlayer();
 	private:
 		State(const State&) = delete;
 		State& operator=(const State&) = delete;
@@ -53,11 +64,8 @@ namespace GameSpace
 		GameState m_nextState;
 		// объект для отображения
 		sf::RenderWindow* m_render;
-		/*
-			@brief обрабатывает логику состояния
-			@param prevState предыдущее состояние
-		*/
-		virtual void stateLogic(GameState prevState) = 0;
+		// объект для проигрывания музыки в каждом состоянии
+		GameSound* m_soundPlayer;
 		/*
 			@brief обрабатывает события состояния
 			@param event событие
@@ -89,11 +97,12 @@ namespace GameSpace
 		float m_fdt;
 		sf::Clock m_gameClock;
 
-		virtual void stateLogic(GameState prevState) override;
 		virtual void stateEventProcessing(sf::Event& event) override;
 		virtual void stateDrawing() override;
 	public:
-		StateGame(sf::RenderWindow* render, Config* mainConfig, World* gameWorld);
+		StateGame(sf::RenderWindow* render, GameSound* soundPlayer, Config* mainConfig, World* gameWorld);
+		virtual GameState update() override;
+		virtual void statePrepare() override;
 		virtual ~StateGame() = default;
 	};
 	//////////////////////////////////////////////////////////////////////////
@@ -105,11 +114,11 @@ namespace GameSpace
 		sf::Sprite m_background;
 		sf::Sprite m_info;
 
-		virtual void stateLogic(GameState prevState) override;
 		virtual void stateEventProcessing(sf::Event& event) override;
 		virtual void stateDrawing() override;
 	public:
-		StateFail(sf::RenderWindow* render, Config* mainConfig);
+		StateFail(sf::RenderWindow* render, GameSound* soundPlayer, Config* mainConfig);
+		virtual void statePrepare() override;
 		virtual ~StateFail() = default;
 	};
 	//////////////////////////////////////////////////////////////////////////
@@ -121,11 +130,11 @@ namespace GameSpace
 		sf::Sprite m_background;
 		sf::Sprite m_info;
 
-		virtual void stateLogic(GameState prevState) override;
 		virtual void stateEventProcessing(sf::Event& event) override;
 		virtual void stateDrawing() override;
 	public:
-		StateWin(sf::RenderWindow* render, Config* mainConfig);
+		StateWin(sf::RenderWindow* render, GameSound* soundPlayer, Config* mainConfig);
+		virtual void statePrepare() override;
 		virtual ~StateWin() = default;
 	};
 	//////////////////////////////////////////////////////////////////////////
@@ -139,11 +148,11 @@ namespace GameSpace
 		sf::Sprite m_start;
 		sf::Sprite m_exit;
 
-		virtual void stateLogic(GameState prevState) override;
 		virtual void stateEventProcessing(sf::Event& event) override;
 		virtual void stateDrawing() override;
 	public:
-		StateMenu(sf::RenderWindow* render, Config* mainConfig);
+		StateMenu(sf::RenderWindow* render, GameSound* soundPlayer, Config* mainConfig);
+		virtual void statePrepare() override;
 		virtual ~StateMenu() = default;
 	};
 	//////////////////////////////////////////////////////////////////////////
@@ -168,11 +177,11 @@ namespace GameSpace
 		};
 		std::vector<LevelsImage> m_levels;	// текстуры и спрайты кэшируются
 
-		virtual void stateLogic(GameState prevState) override;
 		virtual void stateEventProcessing(sf::Event& event) override;
 		virtual void stateDrawing() override;
 	public:
-		StateLevel(sf::RenderWindow* render, Config* mainConfig, World* gameWorld);
+		StateLevel(sf::RenderWindow* render, GameSound* soundPlayer, Config* mainConfig, World* gameWorld);
+		virtual void statePrepare() override;
 		virtual ~StateLevel() = default;
 	};
 	//////////////////////////////////////////////////////////////////////////

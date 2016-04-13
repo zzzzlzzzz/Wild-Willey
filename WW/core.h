@@ -12,6 +12,7 @@
 #include "config.h"
 #include "state.h"
 #include "world.h"
+#include "music.h"
 
 namespace GameSpace
 {
@@ -27,15 +28,18 @@ namespace GameSpace
 		sf::View m_mainView;
 
 		// @brief описывает текущее состояние, в котором пребывает ядро
-		State::GameState m_currentState;
+		GameState m_currentState;
 		// @brief реестр состояний
-		std::map<State::GameState, std::shared_ptr<State>> m_states;
+		std::map<GameState, std::shared_ptr<State>> m_states;
 
 		// @brief описывает конфигурационный файл
 		Config* m_mainConfig;
 
 		// @brief игровой мир
 		World m_gameWorld;
+
+		// @brief игровой проигрыватель
+		GameSound m_musicPlayer;
 
 		GameCore(const GameCore&) = delete;
 		GameCore& operator=(const GameCore&) = delete;

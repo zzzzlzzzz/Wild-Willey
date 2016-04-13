@@ -62,7 +62,8 @@ namespace GameSpace
 		}
 		m_menuConfig = MenuConfig(	readValFromXml(menuRoot, "bgimg"), 
 									readValFromXml(startButton, "img"), 
-									readValFromXml(exitButton, "img")	);
+									readValFromXml(exitButton, "img"),
+									readValFromXml(menuRoot, "sound")	);
 	}
 	//////////////////////////////////////////////////////////////////////////
 	void Config::readLevelsConfig(TiXmlElement* rootElement)
@@ -76,16 +77,18 @@ namespace GameSpace
 		m_levelsConfig = LevelsConfig(	readValFromXml(levelRoot, "bgimg"),
 										stoi(readValFromXml(levelRoot, "blockPerLine")),
 										stoi(readValFromXml(levelRoot, "linePerScreen")),
-										readValFromXml(levelRoot, "loadimg")	);
+										readValFromXml(levelRoot, "loadimg"),
+										readValFromXml(levelRoot, "sound"));
 		for (TiXmlElement* lvl = levelRoot->FirstChildElement();
 			lvl;
 			lvl = lvl->NextSiblingElement())
 		{
 			const std::string image(readValFromXml(lvl, "img"));
 			const std::string file(readValFromXml(lvl, "file"));
+			const std::string sound(readValFromXml(lvl, "sound"));
 			const bool compl = (readValFromXml(lvl, "completed") == "1");
 
-			m_levelsConfig.m_levels.emplace_back(image, file, compl);
+			m_levelsConfig.m_levels.emplace_back(image, file, sound, compl);
 		}
 	}
 	//////////////////////////////////////////////////////////////////////////
@@ -129,7 +132,8 @@ namespace GameSpace
 			throw std::runtime_error("GameSpace::Config::getWinConfig if (!infoItem)");
 		}
 		result = InfoConfig(readValFromXml(infoItem, "bgimg"),
-							readValFromXml(infoItem, "img"));
+							readValFromXml(infoItem, "img"),
+							readValFromXml(infoItem, "sound"));
 	}
 	//////////////////////////////////////////////////////////////////////////
 }

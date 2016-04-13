@@ -99,7 +99,7 @@ namespace GameSpace
 		const int defheight = stoi(readValFromXML(rootElement, "defimgheight"));
 		const Animation::MoveState defstate(getStateFromStr(readValFromXML(rootElement, "initstate")));
 
-		Animation animator(Animation::Frame(defxpos, defxpos, defwidth, defheight), defstate);
+		Animation animator(sf::IntRect(defxpos, defxpos, defwidth, defheight), defstate);
 
 		for (TiXmlElement* state = rootElement->FirstChildElement(); state; state = state->NextSiblingElement())
 		{
@@ -111,7 +111,7 @@ namespace GameSpace
 				const int y = stoi(readValFromXML(image, "y"));
 				const int width = stoi(readValFromXML(image, "width"));
 				const int height = stoi(readValFromXML(image, "height"));
-				animator.addFrame(mstate, Animation::Frame(x, y, width, height));
+				animator.addFrame(mstate, sf::IntRect(x, y, width, height));
 			}
 		}
 
@@ -200,15 +200,18 @@ namespace GameSpace
 		{
 			throw runtime_error("GameSpace::World::loadPlayerFromFile if (!sound)");
 		}
-		const PlayerSound playerSound(readValFromXML(sound, "step"), readValFromXML(sound, "jump"));
+		const PlayerSound playerSound(	readValFromXML(sound, "step"), 
+										readValFromXML(sound, "jump"),
+										readValFromXML(sound, "getLive"),
+										readValFromXML(sound, "getCoin"));
 
 		sf::Image playerImage;
 		if (!playerImage.loadFromFile(file))
 		{
 			throw std::runtime_error("GameSpace::World::loadPlayerFromFile if (!playerImage.loadFromFile(file))");
 		}
-		const int playerCenterX(static_cast<int>(leftX + animator.getFrame(true).m_width / 2.0));
-		const int playerCenterY(static_cast<int>(bottomY - animator.getFrame(true).m_height / 2.0));
+		const int playerCenterX(static_cast<int>(leftX + animator.getDefaultFrame().width / 2.0));
+		const int playerCenterY(static_cast<int>(bottomY - animator.getDefaultFrame().height / 2.0));
 		auto player = make_shared<PlayerObject>(playerImage, playerCenterX, playerCenterY,
 												animator, m_physWorld.get(), density, friction, 
 												xvelocity, yvelocity, playerHud, playerSound, 

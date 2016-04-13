@@ -403,10 +403,10 @@ namespace GameSpace
 								const HUD& hud, const PlayerSound& sound,
 								int playerLive, int maxCoin)
 				: MoveObject(	source, centerX, centerY,
-								animator.getFrame(true).m_x,
-								animator.getFrame(true).m_y,
-								animator.getFrame(true).m_width,
-								animator.getFrame(true).m_height,
+								animator.getDefaultFrame().left,
+								animator.getDefaultFrame().top,
+								animator.getDefaultFrame().width,
+								animator.getDefaultFrame().height,
 								world, density, friction),
 				m_numFootContact(0),
 				m_animator(animator), m_moveSpeed(xvelocity), m_jumpSpeed(yvelocity),
@@ -419,8 +419,8 @@ namespace GameSpace
 		m_objectCollision.m_mainObjectType = PhysicObject::Collision::PhysicObjectType::POT_PLAYER;
 
 		// создание сенсора ног
-		const int absFrameWidth(abs(m_animator.getFrame(true).m_width));
-		const int absFrameHeight(abs(m_animator.getFrame(true).m_height));
+		const int absFrameWidth(abs(m_animator.getDefaultFrame().width));
+		const int absFrameHeight(abs(m_animator.getDefaultFrame().height));
 
 		m_footSensorCollision.m_mainObject = this;
 		m_footSensorCollision.m_mainObjectType = PhysicObject::Collision::PhysicObjectType::POT_SENSOR;
@@ -452,8 +452,7 @@ namespace GameSpace
 	void PlayerObject::draw(sf::RenderWindow& render)
 	{
 		//getBody()->SetTransform(getBody()->GetPosition(), 0); // предотвращаем поворот спрайта при соскальзывании
-		const auto currentFrame(m_animator.getFrame());
-		getSprite().setTextureRect(sf::IntRect(currentFrame.m_x, currentFrame.m_y, currentFrame.m_width, currentFrame.m_height));
+		getSprite().setTextureRect(m_animator.getFrame());
 		MoveObject::draw(render);
 	}
 	//////////////////////////////////////////////////////////////////////////
@@ -622,6 +621,15 @@ namespace GameSpace
 			m_currentLive = 0;
 		}
 		m_currentCoin += coin;
+
+		if (live > 0)
+		{
+			m_sound.getLive();
+		}
+		if (coin > 0)
+		{
+			m_sound.getCoin();
+		}
 	}
 	//////////////////////////////////////////////////////////////////////////
 }

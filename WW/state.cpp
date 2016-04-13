@@ -23,18 +23,17 @@ namespace GameSpace
 		getRender()->display();
 	}
 	//////////////////////////////////////////////////////////////////////////
-	State::GameState State::update(GameState prevState)
+	GameState State::update()
 	{
-		stateLogic(prevState);
 		eventProcessing();
 		drawing();
 		return m_nextState;
 	}
 	//////////////////////////////////////////////////////////////////////////
-	State::State(sf::RenderWindow* render)
-		: m_render(render)
+	State::State(sf::RenderWindow* render, GameSound* soundPlayer)
+		: m_render(render), m_soundPlayer(soundPlayer)
 	{
-		assert(m_render);
+		assert(m_render && m_soundPlayer);
 	}
 	//////////////////////////////////////////////////////////////////////////
 	void State::setNextState(GameState state)
@@ -47,38 +46,45 @@ namespace GameSpace
 		return m_render;
 	}
 	//////////////////////////////////////////////////////////////////////////
+	GameSound* State::getSoundPlayer()
+	{
+		return m_soundPlayer;
+	}
+	//////////////////////////////////////////////////////////////////////////
 	// игра
 	const float StateGame::m_lowFilter = 0.4f;
 
-	StateGame::StateGame(sf::RenderWindow* render, Config* mainConfig, World* gameWorld)
-		: State(render), m_mainConfig(mainConfig), m_gameWorld(gameWorld), m_fdt(0.0f)
+	StateGame::StateGame(sf::RenderWindow* render, GameSound* soundPlayer, Config* mainConfig, World* gameWorld)
+		: State(render, soundPlayer), m_mainConfig(mainConfig), m_gameWorld(gameWorld), m_fdt(0.0f)
 	{
 		assert(m_mainConfig && m_gameWorld);
 	}
 
-	void StateGame::stateLogic(GameState prevState)
+	void StateGame::statePrepare()
 	{
-		if (prevState != State::GameState::GS_GAME)
-		{
-			m_fdt = 0.0f;
-			m_gameClock.restart();
-		}
+		setNextState(GameState::GS_GAME);
+		getSoundPlayer()->play(GameState::GS_GAME);
+
+		m_fdt = 0.0f;
+		m_gameClock.restart();
+	}
+
+	GameState StateGame::update()
+	{
 		m_fdt = m_gameClock.restart().asSeconds() * m_lowFilter + m_fdt * (1 - m_lowFilter);
 		m_gameWorld->runGameTiming(m_fdt);
 
 		if (m_gameWorld->isFail())
 		{
-			setNextState(State::GameState::GS_GAMEFAIL);
+			setNextState(GameState::GS_GAMEFAIL);
 		}
 		else if (m_gameWorld->isWin())
 		{
 			m_mainConfig->markLevelAsCompleted(m_gameWorld->getLastLevel());
-			setNextState(State::GameState::GS_GAMEWIN);
+			setNextState(GameState::GS_GAMEWIN);
 		}
-		else
-		{
-			setNextState(State::GameState::GS_GAME);
-		}
+
+		return State::update();
 	}
 
 	void StateGame::stateEventProcessing(sf::Event& event)
@@ -87,7 +93,7 @@ namespace GameSpace
 		{
 			if (event.key.code == sf::Keyboard::Escape)
 			{
-				setNextState(State::GameState::GS_LEVEL);
+				setNextState(GameState::GS_LEVEL);
 			}
 		}
 	}
@@ -98,10 +104,12 @@ namespace GameSpace
 	}
 	//////////////////////////////////////////////////////////////////////////
 	// проигрыш
-	StateFail::StateFail(sf::RenderWindow* render, Config* mainConfig)
-		: State(render)
+	StateFail::StateFail(sf::RenderWindow* render, GameSound* soundPlayer, Config* mainConfig)
+		: State(render, soundPlayer)
 	{
 		assert(mainConfig);
+
+		getSoundPlayer()->setMusic(GameState::GS_GAMEFAIL, mainConfig->getFailConfig().m_sound);
 
 		if (!m_bgTexture.loadFromFile(mainConfig->getFailConfig().m_backgroundImage))
 		{
@@ -118,9 +126,10 @@ namespace GameSpace
 		m_info.setOrigin(m_infoTexture.getSize().x / 2.0f, m_infoTexture.getSize().y / 2.0f);
 	}
 
-	void StateFail::stateLogic(GameState prevState)
+	void StateFail::statePrepare()
 	{
-		setNextState(State::GameState::GS_GAMEFAIL);
+		setNextState(GameState::GS_GAMEFAIL);
+		getSoundPlayer()->play(GameState::GS_GAMEFAIL);
 	}
 
 	void StateFail::stateEventProcessing(sf::Event& event)
@@ -129,7 +138,7 @@ namespace GameSpace
 		{
 			if (event.key.code == sf::Keyboard::Escape)
 			{
-				setNextState(State::GameState::GS_LEVEL);
+				setNextState(GameState::GS_LEVEL);
 			}
 		}
 	}
@@ -149,10 +158,12 @@ namespace GameSpace
 	//////////////////////////////////////////////////////////////////////////
 	// выйгрыш
 
-	StateWin::StateWin(sf::RenderWindow* render, Config* mainConfig)
-		: State(render)
+	StateWin::StateWin(sf::RenderWindow* render, GameSound* soundPlayer, Config* mainConfig)
+		: State(render, soundPlayer)
 	{
 		assert(mainConfig);
+
+		getSoundPlayer()->setMusic(GameState::GS_GAMEWIN, mainConfig->getWinConfig().m_sound);
 
 		if (!m_bgTexture.loadFromFile(mainConfig->getWinConfig().m_backgroundImage))
 		{
@@ -169,9 +180,10 @@ namespace GameSpace
 		m_info.setOrigin(m_infoTexture.getSize().x / 2.0f, m_infoTexture.getSize().y / 2.0f);
 	}
 
-	void StateWin::stateLogic(GameState prevState)
+	void StateWin::statePrepare()
 	{
-		setNextState(State::GameState::GS_GAMEWIN);
+		setNextState(GameState::GS_GAMEWIN);
+		getSoundPlayer()->play(GameState::GS_GAMEWIN);
 	}
 
 	void StateWin::stateEventProcessing(sf::Event& event)
@@ -180,7 +192,7 @@ namespace GameSpace
 		{
 			if (event.key.code == sf::Keyboard::Escape)
 			{
-				setNextState(State::GameState::GS_LEVEL);
+				setNextState(GameState::GS_LEVEL);
 			}
 		}
 	}
@@ -199,10 +211,12 @@ namespace GameSpace
 	}
 	//////////////////////////////////////////////////////////////////////////
 	// меню
-	StateMenu::StateMenu(sf::RenderWindow* render, Config* mainConfig)
-		: State(render)
+	StateMenu::StateMenu(sf::RenderWindow* render, GameSound* soundPlayer, Config* mainConfig)
+		: State(render, soundPlayer)
 	{
 		assert(mainConfig);
+
+		getSoundPlayer()->setMusic(GameState::GS_MENU, mainConfig->getMenuConfig().m_sound);
 
 		if (!m_bgTexture.loadFromFile(mainConfig->getMenuConfig().m_backgroundImage))
 		{
@@ -226,9 +240,10 @@ namespace GameSpace
 		m_exit.setOrigin(m_exitTexture.getSize().x / 2.0f, 0);
 	}
 
-	void StateMenu::stateLogic(GameState prevState)
+	void StateMenu::statePrepare()
 	{
-		setNextState(State::GameState::GS_MENU);
+		setNextState(GameState::GS_MENU);
+		getSoundPlayer()->play(GameState::GS_MENU);
 	}
 	
 	void StateMenu::stateEventProcessing(sf::Event& event)
@@ -239,11 +254,11 @@ namespace GameSpace
 			const auto coord = getRender()->mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
 			if (m_start.getGlobalBounds().contains(coord))
 			{
-				setNextState(State::GameState::GS_LEVEL);
+				setNextState(GameState::GS_LEVEL);
 			}
 			else if (m_exit.getGlobalBounds().contains(coord))
 			{
-				setNextState(State::GameState::GS_EXIT);
+				setNextState(GameState::GS_EXIT);
 			}
 		}
 	}
@@ -295,10 +310,12 @@ namespace GameSpace
 		return *this;
 	}
 
-	StateLevel::StateLevel(sf::RenderWindow* render, Config* mainConfig, World* gameWorld) 
-		: State(render), m_mainConfig(mainConfig), m_gameWorld(gameWorld)
+	StateLevel::StateLevel(sf::RenderWindow* render, GameSound* soundPlayer, Config* mainConfig, World* gameWorld)
+		: State(render, soundPlayer), m_mainConfig(mainConfig), m_gameWorld(gameWorld)
 	{
 		assert(m_mainConfig && m_gameWorld);
+
+		getSoundPlayer()->setMusic(GameState::GS_LEVEL, mainConfig->getLevelsConfig().m_sound);
 
 		if (!m_bgTexture.loadFromFile(m_mainConfig->getLevelsConfig().m_backgroundImage))
 		{
@@ -320,9 +337,10 @@ namespace GameSpace
 		}
 	}
 
-	void StateLevel::stateLogic(GameState prevState)
+	void StateLevel::statePrepare()
 	{
-		setNextState(State::GameState::GS_LEVEL);
+		setNextState(GameState::GS_LEVEL);
+		getSoundPlayer()->play(GameState::GS_LEVEL);
 	}
 
 	void StateLevel::stateEventProcessing(sf::Event& event)
@@ -340,8 +358,11 @@ namespace GameSpace
 					getRender()->draw(m_loading);
 					getRender()->display();
 
+					getSoundPlayer()->setMusic(GameState::GS_GAME, m_mainConfig->getLevelsConfig().m_levels.at(i).m_levelSound);
 					m_gameWorld->loadFromFile(m_mainConfig->getLevelsConfig().m_levels.at(i).m_levelFile);
-					setNextState(State::GameState::GS_GAME);
+					setNextState(GameState::GS_GAME);
+
+					break;
 				}
 			}
 		}
@@ -349,7 +370,7 @@ namespace GameSpace
 		{
 			if (event.key.code == sf::Keyboard::Escape)
 			{
-				setNextState(State::GameState::GS_MENU);
+				setNextState(GameState::GS_MENU);
 			}
 		}
 	}

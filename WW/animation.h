@@ -4,42 +4,35 @@
 #include <map>
 #include <vector>
 
+#include <SFML/Graphics.hpp>
+
 namespace GameSpace
 {
 	class Animation
 	{
 	public:
-		struct Frame
-		{
-			int m_x;
-			int m_y;
-			int m_width;
-			int m_height;
-			Frame(int x, int y, int width, int height) 
-				: m_x(x), m_y(y), m_width(width), m_height(height)
-			{}
-		};
-		enum class MoveState{	MS_STAY_LEFT, MS_STAY_RIGHT, 
-								MS_MOVE_LEFT, MS_MOVE_RIGHT,
-								MS_JUMP_LEFT, MS_JUMP_RIGHT, 
-								MS_FALL_LEFT, MS_FALL_RIGHT };
+		enum class MoveState{	MS_STAY_LEFT, MS_STAY_RIGHT,	// анимация стойки
+								MS_MOVE_LEFT, MS_MOVE_RIGHT,	// анимация движения
+								MS_JUMP_LEFT, MS_JUMP_RIGHT,	// анимация прыжка
+								MS_FALL_LEFT, MS_FALL_RIGHT		// анимация падения
+							};
 	private:
 		// кадр который выводится по умолчанию
-		Frame m_defaultFrame;
+		sf::IntRect m_defaultFrame;
 		// текущее состояние
 		MoveState m_currentState;
 		// текущий кадр
 		float m_currentFrame;
 		// ассоциация состояний и кадров и скоростей
 		// каждому состоянию соответствует пара скорость анимации и координаты анимации
-		std::map<MoveState, std::pair<float, std::vector<Frame>>> m_animations;
+		std::map<MoveState, std::pair<float, std::vector<sf::IntRect>>> m_animations;
 	public:
 		/*
 			@brief создает аниматора
 			@param defaultFrame кадр, выводимый по умолчанию
 			@param initState начальное состояние объекта
 		*/
-		Animation(const Frame& defaultFrame, MoveState initState);
+		Animation(const sf::IntRect& defaultFrame, MoveState initState);
 		/*
 			@brief задает скорость анимации для состояния
 			@param state состояние
@@ -51,7 +44,7 @@ namespace GameSpace
 			@param state состояние, к которому нужно добавить кадр
 			@param frame сам кадр
 		*/
-		void addFrame(MoveState state, const Frame& frame);
+		void addFrame(MoveState state, const sf::IntRect& frame);
 		/*
 			@brief вызывается при шаге анимации
 			@param state текущее состояние в котором пребывает объект
@@ -59,11 +52,14 @@ namespace GameSpace
 		*/
 		void animate(MoveState state, float delta);
 		/*
-			@param	useDefault использовать для возврата кадр по умолчанию
-			@brief	возвращает кадр анимации для отрисовки
-					в случае отсутствия анимации для состояния дефолтный кадр
+			@brief возвращает кадр анимации для отрисовки
+			@ret   в случае отсутствия анимации для состояния дефолтный кадр, иначе нужный
 		*/
-		Frame getFrame(bool useDefault = false) const;
+		sf::IntRect getFrame() const;
+		/*
+			@brief кадр анимации по умолчанию
+		*/
+		const sf::IntRect& getDefaultFrame() const;
 		/*
 			@brief возвращает текущее состояние
 		*/
