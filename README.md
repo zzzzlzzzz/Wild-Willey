@@ -17,4 +17,4 @@
 
 ## Демо
 
-Демо в разработке
+[![Видео демонстрация на youtube](https://i.ytimg.com/vi/2f2bZbJKvYU/1.jpg)](https://www.youtube.com/watch?v=2f2bZbJKvYU)
